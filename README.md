@@ -22,6 +22,32 @@ jupyter lab
 
 Then open `01_data_exploration.ipynb` and run the cells in order. The live-data cells need an internet connection; `flight_data.db` is created automatically.
 
+## How to run
+
+The notebook's two parts are also available as scripts. Run them from the project root with the virtual environment active:
+
+```bash
+# Fetch live arrivals into Munich and save them to SQLite
+python src/fetch.py
+
+# Train the prototype delay model and save it
+python src/train.py
+```
+
+| Script | What it does | Output |
+|---|---|---|
+| `src/fetch.py` | Pulls live aircraft over Munich from OpenSky, keeps descending flights, adds distance to MUC and ETA | `flight_data.db`, table `active_arrivals` (replaced on each run) |
+| `src/train.py` | Trains a `RandomForestClassifier` on synthetic flights and prints test accuracy | `models/model.joblib` |
+
+`fetch.py` needs an internet connection. OpenSky limits anonymous requests, so if it fails with HTTP 429, wait a few minutes and try again.
+
+To check the results:
+
+```bash
+sqlite3 flight_data.db "SELECT callsign, distance_to_muc_km, eta_minutes FROM active_arrivals ORDER BY eta_minutes;"
+python -c "import joblib; print(joblib.load('models/model.joblib'))"
+```
+
 ## Roadmap
 
 - Use real historical flight data with scheduled vs. actual times
