@@ -5,6 +5,7 @@ pipeline; the accuracy is not meaningful yet.
 
 Usage: python src/train.py
 """
+import json
 from pathlib import Path
 
 import joblib
@@ -14,7 +15,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
-MODEL_PATH = Path(__file__).resolve().parent.parent / "models" / "model.joblib"
+MODELS_DIR = Path(__file__).resolve().parent.parent / "models"
+MODEL_PATH = MODELS_DIR / "model.joblib"
+COLUMNS_PATH = MODELS_DIR / "columns.json"
 
 
 def generate_data(n=100, seed=42):
@@ -45,10 +48,13 @@ def main():
     accuracy = accuracy_score(y_test, model.predict(X_test))
     print(f"Model Accuracy: {accuracy * 100:.2f}%")
 
-    # Save the model
-    MODEL_PATH.parent.mkdir(exist_ok=True)
+    # Save the model, plus the column order it was trained on so the API
+    # can turn raw input ("Rain", "Ryanair") into the same one-hot columns
+    MODELS_DIR.mkdir(exist_ok=True)
     joblib.dump(model, MODEL_PATH)
-    print(f"Model saved to {MODEL_PATH.relative_to(MODEL_PATH.parent.parent)}")
+    COLUMNS_PATH.write_text(json.dumps(list(X.columns), indent=2))
+    print(f"Model saved to models/{MODEL_PATH.name}")
+    print(f"Columns saved to models/{COLUMNS_PATH.name}")
 
 
 if __name__ == "__main__":
